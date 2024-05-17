@@ -22,7 +22,6 @@ const ReactElement = function (
 		type,
 		__mark: 'Gao'
 	};
-
 	return element;
 };
 
@@ -71,4 +70,28 @@ export const jsx = (type: ElementType, config: any, ...maybeChildren: any) => {
 	return ReactElement(type, key, ref, props);
 };
 
-export const jsxDEV = jsx;
+export const jsxDEV = (type: ElementType, config: any) => {
+	let key: null | string = null;
+	let ref = null;
+	const props: any = {};
+
+	for (const prop in config) {
+		const value = config[prop];
+		if (prop === 'key') {
+			if (value !== undefined) {
+				key = '' + value;
+			}
+			continue;
+		}
+		if (prop === 'ref') {
+			if (value !== undefined) {
+				ref = value;
+			}
+			continue;
+		}
+		if ({}.hasOwnProperty.call(config, prop)) {
+			props[prop] = value;
+		}
+	}
+	return ReactElement(type, key, ref, props);
+};
