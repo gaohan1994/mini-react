@@ -27,6 +27,7 @@ export class FiberNode {
 	public alternate: FiberNode | null;
 
 	public flags: Flags;
+	public subtreeFlags: Flags;
 
 	constructor(tag: WorkTag, pendingProps: Props, key: Key) {
 		this.tag = tag;
@@ -54,6 +55,7 @@ export class FiberNode {
 		this.alternate = null;
 		// 副作用
 		this.flags = NoFlags;
+		this.subtreeFlags = NoFlags;
 	}
 }
 
@@ -73,7 +75,7 @@ export class FiberRootNode {
 export const createWorkInProgess = (
 	current: FiberNode,
 	pendingProps: Props
-): FiberNode => {
+) => {
 	let wip = current.alternate;
 
 	if (wip === null) {
@@ -87,6 +89,7 @@ export const createWorkInProgess = (
 		// update
 		wip.pendingProps = pendingProps;
 		wip.flags = NoFlags;
+		wip.subtreeFlags = NoFlags;
 	}
 
 	// 公共修改的部分
@@ -114,4 +117,20 @@ export const createFiberFromElement = (element: ReactElementType) => {
 	const fiber = new FiberNode(workTag, props, key);
 	fiber.type = type;
 	return fiber;
+};
+
+// 将传入 fiber 的子节点 and 子节点的兄弟节点的 flag 冒泡到当前节点
+const bubbleProperties = (wip: FiberNode) => {
+	let subtreeFlags = NoFlags;
+	let child = wip.child;
+
+	while (child !== null) {
+		subtreeFlags |= child.subtreeFlags;
+		subtreeFlags |= child.flags;
+
+		child.return = wip;
+		child = child.sibling;
+	}
+
+	wip.subtreeFlags |= subtreeFlags;
 };

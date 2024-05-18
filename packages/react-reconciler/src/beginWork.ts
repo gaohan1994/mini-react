@@ -24,8 +24,10 @@ export const beginWork = (wip: FiberNode) => {
 			if (__DEV__) {
 				console.warn('没有实现的 wip tag 类型');
 			}
-			return;
+			return null;
 	}
+
+	return null;
 };
 
 // 更新 host root 并返回生成的字 FiberNode
