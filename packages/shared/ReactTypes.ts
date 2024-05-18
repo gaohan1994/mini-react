@@ -10,3 +10,5 @@ export interface ReactElementType {
 	props: Props;
 	type: ElementType;
 }
+
+export type Action<State> = State | ((prevState: State) => State);
