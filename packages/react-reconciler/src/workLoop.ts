@@ -1,13 +1,14 @@
 import { beginWork } from './beginWork';
+import { commitMutationEffects } from './commitWork';
 import { completeWork } from './completeWork';
-import { FiberNode, FiberRootNode, createWorkInProgess } from './fiber';
+import { FiberNode, FiberRootNode, createWorkInProgress } from './fiber';
 import { MutationMask, NoFlags } from './fiberFlags';
 import { HostRoot } from './workTag';
 
 let workInProgress: FiberNode | null = null;
 
 function prepareFreshStack(root: FiberRootNode) {
-	workInProgress = createWorkInProgess(root.current, {});
+	workInProgress = createWorkInProgress(root.current, {});
 }
 
 /**
@@ -87,8 +88,8 @@ function commitRoot(root: FiberRootNode) {
 	if (subtreeHasEffects || rootHasEffects) {
 		// commit 三阶段
 		// before mutation
-		// mutation
-
+		// mutation 阶段开始了
+		commitMutationEffects(finishedWork);
 		root.current = finishedWork;
 		// layout
 	} else {
