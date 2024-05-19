@@ -4,12 +4,11 @@ import {
 	createInstance,
 	createTextInstance
 } from 'hostConfig';
-import { FiberNode } from './fiber';
+import { bubbleProperties, FiberNode } from './fiber';
 import { HostComponent, HostRoot, HostText } from './workTag';
 
 // 构建一颗离屏的 DOM 树
 export const completeWork = (wip: FiberNode) => {
-	const type = wip.type;
 	const newProps = wip.pendingProps;
 	const current = wip.alternate;
 
@@ -28,6 +27,7 @@ export const completeWork = (wip: FiberNode) => {
 				appendAllChildren(instance, wip);
 				wip.stateNode = instance;
 			}
+			bubbleProperties(wip);
 			return;
 
 		case HostText:
@@ -41,9 +41,11 @@ export const completeWork = (wip: FiberNode) => {
 				const instance = createTextInstance(newProps.content);
 				wip.stateNode = instance;
 			}
+			bubbleProperties(wip);
 			return;
 
 		case HostRoot:
+			bubbleProperties(wip);
 			return;
 
 		default:

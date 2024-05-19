@@ -125,7 +125,7 @@ export const createFiberFromElement = (element: ReactElementType) => {
 };
 
 // 将传入 fiber 的子节点 and 子节点的兄弟节点的 flag 冒泡到当前节点
-const bubbleProperties = (wip: FiberNode) => {
+export const bubbleProperties = (wip: FiberNode) => {
 	let subtreeFlags = NoFlags;
 	let child = wip.child;
 
