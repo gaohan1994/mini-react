@@ -24,7 +24,8 @@ const resolvePackageJson = (packageName) => {
 
 const getBaseRollupPlugins = ({
 	alias = {
-		__DEV__: true
+		__DEV__: true,
+		preventAssignment: true
 	},
 	typescript = {}
 } = {}) => {

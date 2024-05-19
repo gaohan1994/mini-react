@@ -1,4 +1,4 @@
-import { appendChildIntoContainer } from 'hostConfig';
+import { appendChildToContainer, Container } from 'hostConfig';
 import { FiberNode, FiberRootNode } from './fiber';
 import { MutationMask, NoFlags, Placement } from './fiberFlags';
 import { HostComponent, HostRoot, HostText } from './workTag';
@@ -21,7 +21,7 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
 	 * 本质上是一个 DFS 深度优先遍历
 	 */
 	while (nextEffect !== null) {
-		const child = nextEffect.child;
+		const child: FiberNode | null = nextEffect.child;
 		if (
 			(nextEffect.subtreeFlags & MutationMask) !== NoFlags &&
 			child !== null
@@ -36,7 +36,7 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
 				// 或者 child === null
 				commitMutationEffectsOnFiber(nextEffect);
 
-				const sibling = nextEffect.sibling;
+				const sibling: FiberNode | null = nextEffect.sibling;
 				// 如果有兄弟节点，则说明当前节点还不是最下面的节点，继续遍历兄弟节点
 				if (sibling !== null) {
 					nextEffect = sibling;
@@ -73,11 +73,13 @@ const commitPlacement = (finishedWork: FiberNode) => {
 	// 找到父节点
 	const hostParent = getHostParent(finishedWork);
 	// 插入
-	appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	if (hostParent !== null) {
+		appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	}
 };
 
 // 找到 fiber 对象 parent 对应的 dom
-const getHostParent = (fiber: FiberNode) => {
+const getHostParent = (fiber: FiberNode): Container | null => {
 	let parent = fiber.return;
 
 	while (parent !== null) {
@@ -95,14 +97,15 @@ const getHostParent = (fiber: FiberNode) => {
 	if (__DEV__) {
 		console.warn('未找到 parent 对应 state node');
 	}
+	return null;
 };
 
 const appendPlacementNodeIntoContainer = (
 	finishedWork: FiberNode,
-	hostParent: FiberNode
+	hostParent: Container
 ) => {
 	if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
-		appendChildIntoContainer(finishedWork.stateNode, hostParent);
+		appendChildToContainer(finishedWork.stateNode, hostParent);
 		return;
 	}
 

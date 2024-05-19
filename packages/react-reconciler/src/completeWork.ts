@@ -1,5 +1,6 @@
 import {
 	appendInitialChild,
+	Container,
 	createInstance,
 	createTextInstance
 } from 'hostConfig';
@@ -47,7 +48,7 @@ export const completeWork = (wip: FiberNode) => {
 	}
 };
 
-const appendAllChildren = (parent: FiberNode, wip: FiberNode) => {
+const appendAllChildren = (parent: Container, wip: FiberNode) => {
 	let node = wip.child;
 
 	// 进行递归
