@@ -1,6 +1,7 @@
 import { beginWork } from './beginWork';
 import { completeWork } from './completeWork';
 import { FiberNode, FiberRootNode, createWorkInProgess } from './fiber';
+import { MutationMask, NoFlags } from './fiberFlags';
 import { HostRoot } from './workTag';
 
 let workInProgress: FiberNode | null = null;
@@ -25,7 +26,7 @@ export function schduleUpdateOnFiber(fiber: FiberNode) {
  *
  * 只有 hostRootFiber 是特殊的，因为他没有 return
  */
-function makeUpdateFromFiberToRoot(fiber: FiberNode): FiberNode | null {
+function makeUpdateFromFiberToRoot(fiber: FiberNode) {
 	let node = fiber;
 	let parent = node.return;
 
@@ -46,7 +47,7 @@ function makeUpdateFromFiberToRoot(fiber: FiberNode): FiberNode | null {
  * 更新机制调用
  * @param root
  */
-function renderRoot(root: FiberNode) {
+function renderRoot(root: FiberRootNode) {
 	// 初始化
 	prepareFreshStack(root);
 
@@ -66,6 +67,33 @@ function renderRoot(root: FiberNode) {
 	root.finishedWork = finishedWork;
 
 	commitRoot(root);
+}
+
+function commitRoot(root: FiberRootNode) {
+	const finishedWork = root.finishedWork;
+
+	if (finishedWork === null) {
+		return;
+	}
+	if (__DEV__) {
+		console.warn('commit 阶段开始', finishedWork);
+	}
+
+	// 首先找到是否需要是否有副作用
+	const subtreeHasEffects =
+		(MutationMask & finishedWork.subtreeFlags) !== NoFlags;
+	const rootHasEffects = (MutationMask & finishedWork.flags) !== NoFlags;
+
+	if (subtreeHasEffects || rootHasEffects) {
+		// commit 三阶段
+		// before mutation
+		// mutation
+
+		root.current = finishedWork;
+		// layout
+	} else {
+		root.current = finishedWork;
+	}
 }
 
 function workLoop() {
