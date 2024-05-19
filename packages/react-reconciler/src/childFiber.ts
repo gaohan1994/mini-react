@@ -1,7 +1,7 @@
 import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode, createFiberFromElement } from './fiber';
 import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
-import { HostComponent, HostText } from './workTag';
+import { HostText } from './workTag';
 import { Placement } from './fiberFlags';
 
 /**
@@ -58,7 +58,7 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 					);
 				default: {
 					if (__DEV__) {
-						console.warn('为实现的 reconsile 类型', newChild);
+						console.warn('未实现的 reconcile 类型', newChild);
 					}
 				}
 			}
@@ -77,7 +77,7 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 		}
 
 		if (__DEV__) {
-			console.warn('为实现的 reconsile 类型', newChild);
+			console.warn('[ChildReconciler]: 未实现的 reconcile 类型', newChild);
 		}
 
 		return null;

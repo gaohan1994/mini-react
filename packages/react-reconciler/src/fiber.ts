@@ -118,8 +118,7 @@ export const createFiberFromElement = (element: ReactElementType) => {
 	fiber.type = type;
 
 	if (__DEV__) {
-		console.warn('create fiber from element', element);
-		console.warn('created fiber: ', fiber);
+		console.warn(`created ${workTag} fiber: `, fiber);
 	}
 	return fiber;
 };

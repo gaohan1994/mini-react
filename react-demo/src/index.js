@@ -1,11 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
-const jsx = (
-	<div>
-		<span>Gao!</span>
-	</div>
-);
-
 const root = document.querySelector('#root');
-ReactDOM.createRoot(root).render(jsx);
+
+function App() {
+	return (
+		<div>
+			<Child />
+		</div>
+	);
+}
+
+const Child = () => {
+	return <span>Gao!</span>;
+};
+
+ReactDOM.createRoot(root).render(<App />);

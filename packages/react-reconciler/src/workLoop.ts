@@ -64,6 +64,10 @@ function renderRoot(root: FiberRootNode) {
 		}
 	} while (true);
 
+	if (__DEV__) {
+		console.warn('work loop end. commit root');
+	}
+
 	const finishedWork = root.current.alternate;
 	root.finishedWork = finishedWork;
 
@@ -98,12 +102,18 @@ function commitRoot(root: FiberRootNode) {
 }
 
 function workLoop() {
+	if (__DEV__) {
+		console.warn('start workLoop');
+	}
 	while (workInProgress !== null) {
 		performUnitOfWork(workInProgress);
 	}
 }
 
 function performUnitOfWork(fiber: FiberNode) {
+	if (__DEV__) {
+		console.warn('start perform unit work fiber: ', fiber);
+	}
 	const next = beginWork(fiber);
 	fiber.memoizedProps = fiber.pendingProps;
 

@@ -1,8 +1,14 @@
 import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode } from './fiber';
 import { UpdateQueue, processUpdateQueue } from './updateQueue';
-import { HostComponent, HostRoot, HostText } from './workTag';
+import {
+	FunctionComponent,
+	HostComponent,
+	HostRoot,
+	HostText
+} from './workTag';
 import { mountChildReconcile, reconcileChildFibers } from './childFiber';
+import { renderWithHooks } from './fiberHooks';
 
 // 递归中的递阶段
 // wip: workInProgress
@@ -19,6 +25,9 @@ export const beginWork = (wip: FiberNode) => {
 		// 叶子节点了，没有子节点了，return null 要执行归阶段了
 		case HostText:
 			return null;
+
+		case FunctionComponent:
+			return updateFunctionComponent(wip);
 
 		default:
 			if (__DEV__) {
@@ -50,6 +59,12 @@ const updateHostRoot = (wip: FiberNode) => {
 const updateHostComponent = (wip: FiberNode) => {
 	const nextProps = wip.pendingProps;
 	const nextChildren = nextProps.children;
+	reconcileChildren(wip, nextChildren);
+	return wip.child;
+};
+
+const updateFunctionComponent = (wip: FiberNode) => {
+	const nextChildren = renderWithHooks(wip);
 	reconcileChildren(wip, nextChildren);
 	return wip.child;
 };

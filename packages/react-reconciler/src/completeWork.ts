@@ -5,7 +5,12 @@ import {
 	createTextInstance
 } from 'hostConfig';
 import { bubbleProperties, FiberNode } from './fiber';
-import { HostComponent, HostRoot, HostText } from './workTag';
+import {
+	FunctionComponent,
+	HostComponent,
+	HostRoot,
+	HostText
+} from './workTag';
 
 // 构建一颗离屏的 DOM 树
 export const completeWork = (wip: FiberNode) => {
@@ -14,9 +19,6 @@ export const completeWork = (wip: FiberNode) => {
 
 	switch (wip.tag) {
 		case HostComponent:
-			if (__DEV__) {
-				console.warn('start complete host component component', wip);
-			}
 			if (current !== null && wip.stateNode) {
 				// update
 			} else {
@@ -28,12 +30,9 @@ export const completeWork = (wip: FiberNode) => {
 				wip.stateNode = instance;
 			}
 			bubbleProperties(wip);
-			return;
+			return null;
 
 		case HostText:
-			if (__DEV__) {
-				console.warn('start complete host text component', wip);
-			}
 			if (current !== null && wip.stateNode) {
 				// update
 			} else {
@@ -42,17 +41,21 @@ export const completeWork = (wip: FiberNode) => {
 				wip.stateNode = instance;
 			}
 			bubbleProperties(wip);
-			return;
+			return null;
 
 		case HostRoot:
 			bubbleProperties(wip);
-			return;
+			return null;
+
+		case FunctionComponent:
+			bubbleProperties(wip);
+			return null;
 
 		default:
 			if (__DEV__) {
 				console.warn('未实现的 complete tag 类型');
 			}
-			return;
+			return null;
 	}
 };
 
