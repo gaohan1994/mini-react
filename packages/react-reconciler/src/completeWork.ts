@@ -15,6 +15,9 @@ export const completeWork = (wip: FiberNode) => {
 
 	switch (wip.tag) {
 		case HostComponent:
+			if (__DEV__) {
+				console.warn('start complete host component component', wip);
+			}
 			if (current !== null && wip.stateNode) {
 				// update
 			} else {
@@ -28,6 +31,9 @@ export const completeWork = (wip: FiberNode) => {
 			return;
 
 		case HostText:
+			if (__DEV__) {
+				console.warn('start complete host text component', wip);
+			}
 			if (current !== null && wip.stateNode) {
 				// update
 			} else {

@@ -116,6 +116,11 @@ export const createFiberFromElement = (element: ReactElementType) => {
 
 	const fiber = new FiberNode(workTag, props, key);
 	fiber.type = type;
+
+	if (__DEV__) {
+		console.warn('create fiber from element', element);
+		console.warn('created fiber: ', fiber);
+	}
 	return fiber;
 };
 

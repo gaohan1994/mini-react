@@ -26,8 +26,6 @@ export const beginWork = (wip: FiberNode) => {
 			}
 			return null;
 	}
-
-	return null;
 };
 
 // 更新 host root 并返回生成的字 FiberNode

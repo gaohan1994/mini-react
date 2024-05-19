@@ -1,7 +1,7 @@
 import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode, createFiberFromElement } from './fiber';
 import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
-import { HostComponent } from './workTag';
+import { HostComponent, HostText } from './workTag';
 import { Placement } from './fiberFlags';
 
 /**
@@ -29,7 +29,7 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 		currentFiber: FiberNode | null,
 		content: string | number
 	) {
-		const fiber = new FiberNode(HostComponent, { content }, null);
+		const fiber = new FiberNode(HostText, { content }, null);
 		fiber.return = returnFiber;
 		return fiber;
 	}
@@ -56,7 +56,6 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 					return placeSingleChild(
 						reconcileSingleElement(returnFiber, currentFiber, newChild)
 					);
-
 				default: {
 					if (__DEV__) {
 						console.warn('为实现的 reconsile 类型', newChild);
@@ -69,6 +68,9 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 
 		// HostText 类型
 		if (typeof newChild === 'string' || typeof newChild === 'number') {
+			if (__DEV__) {
+				console.warn('reconcile host text component');
+			}
 			return placeSingleChild(
 				reconcileSingleTextNode(returnFiber, currentFiber, newChild)
 			);

@@ -1,10 +1,11 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 const jsx = (
 	<div>
-		hello mini-react<span> Gao!</span>
+		<span>Gao!</span>
 	</div>
 );
 
-console.log(React);
-console.log(jsx);
+const root = document.querySelector('#root');
+ReactDOM.createRoot(root).render(jsx);
