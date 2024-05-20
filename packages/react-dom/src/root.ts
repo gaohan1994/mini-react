@@ -16,7 +16,7 @@ export const createRoot = (container: Container) => {
 	return {
 		// 返回一个方法，渲染 ReactElement
 		render(element: ReactElementType) {
-			updateContainer(element, root);
+			return updateContainer(element, root);
 		}
 	};
 };
