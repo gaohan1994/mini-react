@@ -14,7 +14,7 @@ function prepareFreshStack(root: FiberRootNode) {
 /**
  * 在 Fiber 中调度 update
  */
-export function schduleUpdateOnFiber(fiber: FiberNode) {
+export function scheduleUpdateOnFiber(fiber: FiberNode) {
 	// update 是从根节点开始更新，所以先找到根节点
 	const root = makeUpdateFromFiberToRoot(fiber);
 	renderRoot(root);

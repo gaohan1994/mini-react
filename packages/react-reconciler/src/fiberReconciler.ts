@@ -8,7 +8,7 @@ import {
 	enqueueUpdate
 } from './updateQueue';
 import { ReactElementType } from 'shared/ReactTypes';
-import { schduleUpdateOnFiber } from './workLoop';
+import { scheduleUpdateOnFiber } from './workLoop';
 
 /**
  * 创建根节点
@@ -41,6 +41,6 @@ export const updateContainer = (
 		hostRootFiber.updateQueue as UpdateQueue<ReactElementType | null>,
 		update
 	);
-	schduleUpdateOnFiber(hostRootFiber);
+	scheduleUpdateOnFiber(hostRootFiber);
 	return element;
 };

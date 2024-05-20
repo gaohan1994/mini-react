@@ -6,7 +6,7 @@ import {
 	resolvePackagePath
 } from './utils';
 
-const { name, module } = resolvePackageJson('react-dom');
+const { name, module, peerDependencies } = resolvePackageJson('react-dom');
 // 包地址
 const packagePath = resolvePackagePath(name);
 // 包产物地址
@@ -28,6 +28,7 @@ export default [
 				format: 'umd'
 			}
 		],
+		external: [...Object.keys(peerDependencies)],
 		plugins: [
 			...getBaseRollupPlugins(),
 

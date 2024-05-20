@@ -45,7 +45,7 @@ const updateHostRoot = (wip: FiberNode) => {
 	// 因为是 HostRoot 所以 updateQueue 的类型是 Element 也就是 render(<App/>) 中的 <App/>
 	const updateQueue = wip.updateQueue as UpdateQueue<Element>;
 
-	const pending = updateQueue.shared.pendding;
+	const pending = updateQueue.shared.pending;
 	// 调用封装好的更新函数
 	const { memoizedState } = processUpdateQueue(baseState, pending);
 	wip.memoizedState = memoizedState;
