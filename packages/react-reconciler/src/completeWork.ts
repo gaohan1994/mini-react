@@ -11,6 +11,7 @@ import {
 	HostRoot,
 	HostText
 } from './workTag';
+import { Update } from './fiberFlags';
 
 // 构建一颗离屏的 DOM 树
 export const completeWork = (wip: FiberNode) => {
@@ -21,6 +22,7 @@ export const completeWork = (wip: FiberNode) => {
 		case HostComponent:
 			if (current !== null && wip.stateNode) {
 				// update
+				// 遍历属性变化如 className a => b 则标记变化
 			} else {
 				// mount
 				// 1. 构建DOM节点
@@ -35,6 +37,13 @@ export const completeWork = (wip: FiberNode) => {
 		case HostText:
 			if (current !== null && wip.stateNode) {
 				// update
+				const oldText = current.memoizedProps.content;
+				const newText = newProps.content;
+
+				if (oldText !== newText) {
+					// 标记更新
+					markUpdate(wip);
+				}
 			} else {
 				// mount
 				const instance = createTextInstance(newProps.content);
@@ -57,6 +66,10 @@ export const completeWork = (wip: FiberNode) => {
 			}
 			return null;
 	}
+};
+
+const markUpdate = (wip: FiberNode) => {
+	wip.flags |= Update;
 };
 
 const appendAllChildren = (parent: Container, wip: FiberNode) => {
@@ -85,7 +98,7 @@ const appendAllChildren = (parent: Container, wip: FiberNode) => {
 			if (node.return === null || node.return === wip) {
 				return;
 			}
-			node = node?.return;
+			node = node.return;
 		}
 
 		node.sibling.return = node;

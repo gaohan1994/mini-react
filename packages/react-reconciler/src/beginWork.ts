@@ -12,6 +12,15 @@ import { renderWithHooks } from './fiberHooks';
 
 // 递归中的递阶段
 // wip: workInProgress
+// beginWork 做的事情:
+// update:
+// 1) 是否可以复用 current Fiber
+//		- 比较 key
+// 		- 比较 type
+// 		- 如果都相同则可以复用
+// 2) 不能复用的话 则创建新的 fiber
+// ---
+// mount:
 export const beginWork = (wip: FiberNode) => {
 	// 比较ReactElement和FiberNode并生成子FiberNode
 
