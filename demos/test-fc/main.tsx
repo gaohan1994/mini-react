@@ -3,12 +3,7 @@ import ReactDOM from 'react-dom/client';
 
 const App = () => {
 	const [num, setNum] = useState(1);
-	window.setNum = setNum;
-	return num === 3 ? <Child /> : <div>{num}</div>;
-};
-
-const Child = () => {
-	return <div>child</div>;
+	return <div onClickCapture={() => setNum(num + 1)}>{num}</div>;
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />);

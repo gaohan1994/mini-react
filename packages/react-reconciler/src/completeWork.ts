@@ -4,6 +4,7 @@ import {
 	createInstance,
 	createTextInstance
 } from 'hostConfig';
+import { updateFiberProps } from 'react-dom/src/SyntheticEvent';
 import { bubbleProperties, FiberNode } from './fiber';
 import {
 	FunctionComponent,
@@ -23,6 +24,10 @@ export const completeWork = (wip: FiberNode) => {
 			if (current !== null && wip.stateNode) {
 				// update
 				// 遍历属性变化如 className a => b 则标记变化
+				// 1. props 是否变化
+				// 2. 对变化的属性进行保存 打上 update 标签并在 commit 阶段处理
+				// 3. 这里偷懒直接update全部
+				updateFiberProps(wip.stateNode, newProps);
 			} else {
 				// mount
 				// 1. 构建DOM节点
