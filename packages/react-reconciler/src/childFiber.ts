@@ -8,6 +8,8 @@ import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
 import { HostText } from './workTag';
 import { ChildDeletion, Placement } from './fiberFlags';
 
+type ExistingChildrenMap = Map<string | number, FiberNode>;
+
 /**
  *
  * @param {boolean} shouldTrackEffect
@@ -45,6 +47,85 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 			deleteChild(returnFiber, childToDelete);
 			childToDelete = childToDelete.sibling;
 		}
+	}
+
+	/**
+	 * 多子节点的 reconcile 算法整体流程分为4步。
+	 * 将current中所有同级fiber保存在Map中
+	 * 遍历newChild数组，对于每个遍历到的element，存在两种情况：
+	 * 在Map中存在对应current fiber，且可以复用
+	 * 在Map中不存在对应current fiber，或不能复用
+	 * 判断是插入还是移动
+	 * 最后Map中剩下的都标记删除
+	 *
+	 * @param {FiberNode} returnFiber
+	 * @param {(FiberNode| null)} currentFirstFiber
+	 * @param {any[]} newChild
+	 */
+	function reconcileChildrenArray(
+		returnFiber: FiberNode,
+		currentFirstFiber: FiberNode | null,
+		newChild: any[]
+	) {
+		// current 树中最后一个标记移动的 index
+		let lastPlacementIndex = 0;
+		let lastNewFiber: FiberNode | null = null;
+		let firstNewFiber: FiberNode | null = null;
+
+		// 1. 将current中所有同级fiber保存在Map中;
+		const map: ExistingChildrenMap = new Map();
+		let current = currentFirstFiber;
+		while (current !== null) {
+			const keyToUse = current.key !== null ? current.key : current.index;
+			map.set(keyToUse, current);
+			current = current.sibling;
+		}
+		// 2. 遍历 newChild 寻找是否可以复用
+		for (let index = 0; index < newChild.length; index++) {
+			const after = newChild[index];
+			const newFiber = updateFromMap(returnFiber, map, after, index);
+			if (newFiber === null) {
+				continue;
+			}
+
+			// 3. 判断移动还是插入
+			newFiber.index = index;
+			newFiber.return = returnFiber;
+
+			if (lastNewFiber === null) {
+				lastNewFiber = newFiber;
+				firstNewFiber = newFiber;
+			} else {
+				lastNewFiber.sibling = newFiber;
+				lastNewFiber = lastNewFiber.sibling;
+			}
+
+			if (!shouldTrackEffect) {
+				continue;
+			}
+
+			const current = newFiber.alternate;
+			if (current !== null) {
+				const oldIndex = current.index;
+				if (oldIndex < lastPlacementIndex) {
+					// 应该移动
+					newFiber.flags |= Placement;
+					continue;
+				} else {
+					// 不移动，更新 lastPlacementIndex
+					lastPlacementIndex = oldIndex;
+				}
+			} else {
+				// mount 肯定打上 placement 标签咯
+				newFiber.flags |= Placement;
+			}
+		}
+
+		// 4. map 中剩余的标记为删除
+		map.forEach((fiberToDelete) => {
+			deleteChild(returnFiber, fiberToDelete);
+		});
+		return firstNewFiber;
 	}
 
 	// 协调 ReactElement
@@ -161,9 +242,13 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 					}
 				}
 			}
+
+			// TODO 多节点情况
+			if (Array.isArray(newChild)) {
+				return reconcileChildrenArray(returnFiber, currentFiber, newChild);
+			}
 		}
 
-		// TODO 多节点情况
 		// HostText 类型
 		if (typeof newChild === 'string' || typeof newChild === 'number') {
 			if (__DEV__) {
@@ -197,6 +282,49 @@ function useFiber(fiber: FiberNode, pendingProps: Props) {
 	clone.index = 0;
 	clone.sibling = null;
 	return clone;
+}
+
+function updateFromMap(
+	returnFiber: FiberNode,
+	existingMap: ExistingChildrenMap,
+	element: any,
+	index: string | number
+) {
+	const keyToUse = element.key !== null ? element.key : index;
+	if (typeof element === 'string' || typeof element === 'number') {
+		// 1. element是HostText，current fiber是么？
+		const before = existingMap.get(keyToUse);
+		if (before) {
+			if (before.tag === HostText) {
+				// 可以复用
+				existingMap.delete(keyToUse);
+				return useFiber(before, { content: element });
+			}
+		}
+		// 不可以复用，创建一个新的
+		return new FiberNode(HostText, { content: element }, null);
+	}
+
+	if (typeof element === 'object' && element !== null) {
+		// element是其他ReactElement，current fiber是么？
+		switch (element.$$typeof) {
+			case REACT_ELEMENT_TYPE:
+				const before = existingMap.get(keyToUse);
+				if (before) {
+					if (before.type === element.type) {
+						existingMap.delete(keyToUse);
+						return useFiber(before, element.props);
+					}
+				}
+				return createFiberFromElement(element);
+		}
+	}
+
+	// todo 数组类型处理
+	if (Array.isArray(element) && __DEV__) {
+		console.warn('还未实现数组类型的 child');
+	}
+	return null;
 }
 
 export const reconcileChildFibers = ChildReconciler(true);
