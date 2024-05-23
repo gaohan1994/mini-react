@@ -30,7 +30,38 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 		}
 	}
 
+	// 删除剩余的兄弟节点
+	function deleteRemainingChildren(
+		returnFiber: FiberNode,
+		currentFirstChild: FiberNode | null
+	) {
+		if (!shouldTrackEffect) {
+			return;
+		}
+
+		let childToDelete = currentFirstChild;
+
+		while (childToDelete !== null) {
+			deleteChild(returnFiber, childToDelete);
+			childToDelete = childToDelete.sibling;
+		}
+	}
+
 	// 协调 ReactElement
+	// 	当前支持的情况：
+	// A1 -> B1
+	// A1 -> A2
+	// 需要支持的情况：
+	// ABC -> A
+	// 「单/多节点」是指「更新后是单/多节点」
+	// 更细致的，我们需要区分4种情况：
+	// key相同，type相同 == 复用当前节点
+	// 例如：A1 B2 C3 -> A1
+	// key相同，type不同 == 不存在任何复用的可能性
+	// 例如：A1 B2 C3 -> B1
+	// key不同，type相同  == 当前节点不能复用
+	// key不同，type不同 == 当前节点不能复用
+	// 对于reconcileSingleTextNode的改动
 	function reconcileSingleElement(
 		returnFiber: FiberNode,
 		currentFiber: FiberNode | null,
@@ -41,29 +72,34 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 		// 	- 比较 type
 		// 	- 如果都相同则可以复用
 		const key = element.key;
-		work: if (currentFiber !== null) {
+		while (currentFiber !== null) {
 			// update 情况
 			if (currentFiber.key === key) {
 				// key 相同
 				if (element.$$typeof === REACT_ELEMENT_TYPE) {
 					if (element.type === currentFiber.type) {
-						// type 相同, 应该复用
+						// type 相同, 当前节点可以复用
 						const existing = useFiber(currentFiber, element.props);
 						existing.return = returnFiber;
+						// 标记剩余的节点为删除
+						deleteRemainingChildren(returnFiber, existing.sibling);
 						return existing;
 					}
-					// 不可复用，删除旧的，创建新的
-					deleteChild(returnFiber, currentFiber);
-					break work;
+					// key 相同，type不同，不存在任何复用的可能
+					// 删除全部的旧节点
+					deleteRemainingChildren(returnFiber, currentFiber);
+					break;
 				} else {
 					if (__DEV__) {
 						console.warn('未实现的 react element type');
-						break work;
+						break;
 					}
 				}
 			} else {
-				// 不可复用，删除旧的，创建新的
+				// key 不同，当前节点不可复用
+				// 继续遍历兄弟节点
 				deleteChild(returnFiber, currentFiber);
+				currentFiber = currentFiber.sibling;
 			}
 		}
 
@@ -77,18 +113,21 @@ function ChildReconciler(shouldTrackEffect: boolean) {
 		currentFiber: FiberNode | null,
 		content: string | number
 	) {
-		if (currentFiber !== null) {
+		while (currentFiber !== null) {
 			// update
 			if (currentFiber.tag === HostText) {
 				// 类型不变还是 text 类型，则可以复用
 				const existing = useFiber(currentFiber, { content });
 				existing.return = returnFiber;
+				// 其他的兄弟节点都删除掉
+				deleteRemainingChildren(returnFiber, existing.sibling);
 				return existing;
 			}
 			// 如 <div/> => hahahah
+			// 当前节点类型不是 HostText 删除掉
 			deleteChild(returnFiber, currentFiber);
+			currentFiber = currentFiber.sibling;
 		}
-
 		const fiber = new FiberNode(HostText, { content }, null);
 		fiber.return = returnFiber;
 		return fiber;
