@@ -103,10 +103,10 @@ const appendAllChildren = (parent: Container, wip: FiberNode) => {
 			if (node.return === null || node.return === wip) {
 				return;
 			}
-			node = node.return;
+			node = node?.return;
 		}
 
-		node.sibling.return = node;
+		node.sibling.return = node.return;
 		node = node.sibling;
 	}
 };

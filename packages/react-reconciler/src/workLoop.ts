@@ -111,9 +111,6 @@ function workLoop() {
 }
 
 function performUnitOfWork(fiber: FiberNode) {
-	if (__DEV__) {
-		console.warn('start perform unit work fiber: ', fiber);
-	}
 	const next = beginWork(fiber);
 	fiber.memoizedProps = fiber.pendingProps;
 

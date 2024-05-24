@@ -2,6 +2,8 @@ import {
 	appendChildToContainer,
 	commitUpdate,
 	Container,
+	insertChildToContainer,
+	Instance,
 	removeChild
 } from 'hostConfig';
 import { FiberNode, FiberRootNode } from './fiber';
@@ -179,9 +181,76 @@ const commitPlacement = (finishedWork: FiberNode) => {
 
 	// 找到父节点
 	const hostParent = getHostParent(finishedWork);
+	// 兄弟节点
+	const hostSibling = getHostSibling(finishedWork);
+
 	// 插入
 	if (hostParent !== null) {
-		appendPlacementNodeIntoContainer(finishedWork, hostParent);
+		insertOrAppendPlacementNodeIntoContainer(
+			finishedWork,
+			hostParent,
+			hostSibling
+		);
+	}
+};
+
+// 对于插入操作，之前对应的DOM方法是parentNode.appendChild，
+// 现在为了实现移动操作，需要支持parentNode.insertBefore。
+// parentNode.insertBefore需要找到「目标兄弟Host节点」，要考虑2个因素：
+// 可能并不是目标fiber的直接兄弟节点
+// 找到兄弟节点的 dom 节点
+// 情况1
+// <A/><B/>
+// function B() {
+//   return <div/>;
+// }
+// 情况2
+// <App/><div/>
+// function App() {
+//   return <A/>;
+// }
+const getHostSibling = (fiber: FiberNode) => {
+	let node = fiber;
+
+	findSibling: while (true) {
+		// 向下没找到 向上找
+		while (node.sibling === null) {
+			const parent = node.return;
+
+			if (
+				parent === null ||
+				parent.tag === HostComponent ||
+				parent.tag === HostRoot
+			) {
+				return null;
+			}
+
+			node = parent;
+		}
+
+		// 找兄弟节点
+		node.sibling.return = node.return;
+		node = node.sibling;
+
+		while (node.tag !== HostText && node.tag !== HostComponent) {
+			if ((node.flags & Placement) !== NoFlags) {
+				// 排除掉不稳定的节点
+				continue findSibling;
+			}
+
+			if (node.child === null) {
+				// 没有子节点了
+				continue findSibling;
+			} else {
+				node.child.return = node;
+				node = node.child;
+			}
+		}
+
+		if ((node.flags & Placement) === NoFlags) {
+			// 找到了
+			return node.stateNode;
+		}
 	}
 };
 
@@ -207,22 +276,27 @@ const getHostParent = (fiber: FiberNode): Container | null => {
 	return null;
 };
 
-const appendPlacementNodeIntoContainer = (
+const insertOrAppendPlacementNodeIntoContainer = (
 	finishedWork: FiberNode,
-	hostParent: Container
+	hostParent: Container,
+	before?: Instance
 ) => {
 	if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
-		appendChildToContainer(hostParent, finishedWork.stateNode);
+		if (before) {
+			insertChildToContainer(finishedWork.stateNode, hostParent, before);
+		} else {
+			appendChildToContainer(hostParent, finishedWork.stateNode);
+		}
 		return;
 	}
 
 	const child = finishedWork.child;
 	if (child !== null) {
-		appendPlacementNodeIntoContainer(child, hostParent);
+		insertOrAppendPlacementNodeIntoContainer(child, hostParent);
 
 		let sibling = child.sibling;
 		while (sibling !== null) {
-			appendPlacementNodeIntoContainer(sibling, hostParent);
+			insertOrAppendPlacementNodeIntoContainer(sibling, hostParent);
 			sibling = sibling.sibling;
 		}
 	}
